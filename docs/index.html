@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vitalis — Clinical Report Intelligence Agent</title>
+<style>
+*{margin:0;box-sizing:border-box}
+body{background:#0d1117;color:#e6edf3;font:16px/1.65 system-ui,sans-serif;max-width:860px;margin:0 auto;padding:48px 24px}
+h1{font-size:38px;margin-bottom:6px}
+.sub{color:#8b949e;font-size:18px;margin-bottom:28px}
+h2{font-size:24px;margin:40px 0 12px;color:#22d3ee}
+p,li{color:#c9d4dc}
+ul{padding-left:22px}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:24px 0}
+.metric{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:16px;text-align:center}
+.metric b{display:block;font-size:30px;color:#22d3ee}
+.metric span{font-size:12px;color:#8b949e}
+pre{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:18px;overflow-x:auto;font-size:13px;color:#a5d6ff}
+table{width:100%;border-collapse:collapse;margin:20px 0;font-size:14px}
+th,td{border:1px solid #30363d;padding:10px;text-align:left}
+th{background:#161b22;color:#22d3ee}
+.warn{background:#3a2b00;border:1px solid #9e6a03;border-radius:12px;padding:14px 18px;margin:24px 0;font-size:14px}
+a{color:#22d3ee}
+.dec{margin:14px 0}.dec b{color:#fff}
+footer{margin-top:48px;color:#8b949e;font-size:13px}
+</style>
+</head>
+<body>
+<h1>Vitalis</h1>
+<div class="sub">A LangGraph multi-agent system that reads clinical lab reports — and knows when to say "I don't know."</div>
+<div class="warn">⚠️ Case study of a <b>software demo</b> built on <b>synthetic data</b> (fictional patients). Not medical advice; not a medical device.</div>
+
+<h2>Problem</h2>
+<p>Pasting a lab report into a single LLM call produces confident prose that hallucinates reference ranges and never abstains. Measured on 24 synthetic reports: a naive baseline reported <b>"normal" on 3 critically abnormal values</b> (potassium 6.4 mmol/L) and answered 100% of adversarial reports. In health, the confident wrong answer is the failure mode that matters.</p>
+
+<h2>Solution</h2>
+<p>Five agents on LangGraph, each with one job: <b>Ingest</b> normalizes the report, <b>Extractor</b> pulls biomarkers, <b>Skeptic</b> independently recomputes every flag and challenges contradictions, <b>Counselor</b> drafts plain-language insights, <b>Arbiter</b> merges them into a cited answer — or abstains via three gates (missing units, critical contradiction, low extraction confidence). Flag math is rule-based in every mode; the LLM only writes prose from validated numbers.</p>
+
+<h2>Measured impact</h2>
+<div class="metrics">
+<div class="metric"><b>100%</b><span>trap abstention (4/4)</span></div>
+<div class="metric"><b>0</b><span>false abstentions</span></div>
+<div class="metric"><b>1.00</b><span>extraction F1 (208 markers)</span></div>
+<div class="metric"><b>0</b><span>dangerous misses (baseline: 3)</span></div>
+</div>
+
+<h2>Key decisions</h2>
+<div class="dec"><b>LangGraph over LangChain chains</b> — conditional routing (a failed report skips counseling) and per-node streaming, which the live demo visualizes.</div>
+<div class="dec"><b>Separate skeptic agent</b> — the extractor transcribes what the lab printed, misprints included; only independent recomputation catches them.</div>
+<div class="dec"><b>Abstention as a product decision</b> — exit code 2, three gates, measured rather than hoped-for.</div>
+<div class="dec"><b>Rule-based flag math, always</b> — the model never invents a reference range, in mock or real mode.</div>
+
+<h2>Demo</h2>
+<p>The Streamlit app shows an animated agent floor: five avatars walk between desks as the pipeline runs, the skeptic fires challenges, and the arbiter delivers a cited answer — or the abstain banner. Fully offline; no API keys.</p>
+<pre>bash scripts/quickstart.sh   # tests -> eval -> sample run
+make demo                    # localhost:8501</pre>
+
+<h2>Repo</h2>
+<p><a href="https://github.com/prudhvikollads-source/vitalis-report-agent">github.com/prudhvikollads-source/vitalis-report-agent</a></p>
+
+<footer>Built as an AI-engineering portfolio project · MIT License</footer>
+</body>
+</html>
